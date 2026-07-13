@@ -1,0 +1,3 @@
+# Merge this block into ~/.codex/config.toml after installing an ECC Codex adapter.
+[hooks]
+# The adapter owns the event registrations. Do not copy tokens or local paths.

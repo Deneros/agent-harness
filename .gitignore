@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+coverage/
+auth.json
+sessions/
+cache/
+metrics/
+state*.sqlite*
