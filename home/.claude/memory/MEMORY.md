@@ -1,2 +1,4 @@
 - [Nicolás Profile](user_profile.md) — Backend dev, Cali Colombia, +4yr exp, loves Dokploy, no .NET
 - [ECC Harness Installed](ecc-harness-installed.md) — ECC installed globally (Claude/Codex/OpenCode); hooks dormant
+- [Agent Harness Repo](agent-harness-repo.md) — Deneros/agent-harness privado: snapshot portable, bootstrap.sh restaura una máquina
+- [aes-front Build State](aes-front-build-state.md) — 641 errores de tipos preexistentes; 2 ramas locales sin push
