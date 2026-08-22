@@ -13,4 +13,13 @@ SLUG=$(printf '%s' "$HOME" | tr '/' '-')
 MEM="$HOME/.claude/projects/$SLUG/memory"
 [ -d "$MEM" ] && rsync -a --delete "$MEM/" "$DEST/.claude/memory/"
 
+
+# Registrar qué skills del store comun se comparten con Codex/OpenCode
+: > "$(dirname "$DEST")/shared-skills.txt"
+for h in "$HOME/.codex/skills" "$HOME/.opencode/skills"; do
+  [ -d "$h" ] || continue
+  find "$h" -maxdepth 1 -type l -lname '*.agents/skills/*' -printf '%f\n' 2>/dev/null
+done | sort -u > "$(dirname "$DEST")/shared-skills.txt"
+echo "==> $(wc -l < "$(dirname "$DEST")/shared-skills.txt") skills compartidas registradas"
+
 echo "==> harness sincronizado al repo. Revisa 'git status' antes de commitear."

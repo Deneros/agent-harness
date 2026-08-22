@@ -45,6 +45,20 @@ if old!=home and old in raw:
 PYEOF
 fi
 
+# 3c. Compartir skills con Codex y OpenCode (solo si el host existe)
+SHARED="$(dirname "$SRC")/shared-skills.txt"
+if [ -f "$SHARED" ]; then
+  for h in "$HOME/.codex/skills" "$HOME/.opencode/skills"; do
+    [ -d "$h" ] || continue
+    n=0
+    while read -r sk; do
+      [ -n "$sk" ] && [ -d "$HOME/.agents/skills/$sk" ] || continue
+      ln -sfn "../../.agents/skills/$sk" "$h/$sk" && n=$((n+1))
+    done < "$SHARED"
+    echo "==> $n skills enlazadas en $h"
+  done
+fi
+
 # 4. Ejecutables
 find "$HOME/.claude/scripts" -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
 
