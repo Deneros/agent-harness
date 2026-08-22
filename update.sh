@@ -3,8 +3,11 @@
 set -euo pipefail
 DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/home"
 
-for d in agents commands scripts hooks rules ecc skills; do
-  rsync -a --delete "$HOME/.claude/$d/" "$DEST/.claude/$d/"
+for d in agents commands scripts hooks rules ecc skills .agents; do
+  [ -d "$HOME/.claude/$d" ] && mkdir -p "$DEST/.claude/$d" && rsync -a --delete "$HOME/.claude/$d/" "$DEST/.claude/$d/"
+done
+for f in AGENTS.md README.md marketplace.json plugin.json PLUGIN_SCHEMA_NOTES.md the-security-guide.md; do
+  [ -f "$HOME/.claude/$f" ] && cp -a "$HOME/.claude/$f" "$DEST/.claude/$f"
 done
 cp -a "$HOME/.claude/settings.json" "$DEST/.claude/settings.json"
 rsync -a --delete "$HOME/.agents/skills/" "$DEST/.agents/skills/"

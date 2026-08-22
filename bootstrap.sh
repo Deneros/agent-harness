@@ -19,8 +19,12 @@ fi
 # 2. Copiar el harness (los symlinks de skills/ son relativos y resuelven solos)
 mkdir -p "$HOME/.agents" "$HOME/.claude"
 cp -a "$SRC/.agents/skills" "$HOME/.agents/"
-for d in agents commands scripts hooks rules ecc skills; do
-  cp -a "$SRC/.claude/$d" "$HOME/.claude/"
+for d in agents commands scripts hooks rules ecc skills .agents; do
+  [ -e "$SRC/.claude/$d" ] && cp -a "$SRC/.claude/$d" "$HOME/.claude/"
+done
+# Archivos sueltos en la raiz que ECC instala (v2.1.0+)
+for f in AGENTS.md README.md marketplace.json plugin.json PLUGIN_SCHEMA_NOTES.md the-security-guide.md; do
+  [ -f "$SRC/.claude/$f" ] && cp -a "$SRC/.claude/$f" "$HOME/.claude/$f"
 done
 cp -a "$SRC/.claude/settings.json" "$HOME/.claude/settings.json"
 

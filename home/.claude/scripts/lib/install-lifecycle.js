@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { execFileSync } = require('child_process');
 const os = require('os');
 const path = require('path');
 
@@ -6,7 +7,14 @@ const { resolveInstallPlan, loadInstallManifests } = require('./install-manifest
 const { readInstallState, writeInstallState } = require('./install-state');
 const { assertWithinTrustedRoot } = require('./path-safety');
 const { createManifestInstallPlan } = require('./install-executor');
+const {
+  prepareClaudeSkillMigration,
+  removeLegacyClaudeSkillFiles,
+} = require('./install/claude-skill-migration');
 const { getInstallTargetAdapter, listInstallTargetAdapters } = require('./install-targets/registry');
+const OPENCODE_BUILD_ARTIFACT = path.join('.opencode', 'dist');
+const OPENCODE_BUILD_SCRIPT = path.join('scripts', 'build-opencode.js');
+const OPENCODE_PLUGIN_NOT_BUILT_CODE = 'opencode-plugin-not-built';
 
 const DEFAULT_REPO_ROOT = path.join(__dirname, '../..');
 
@@ -44,6 +52,31 @@ function compareStringArrays(left, right) {
   }
 
   return leftValues.every((value, index) => value === rightValues[index]);
+}
+
+function hasOpencodeBuildError(issues) {
+  return Array.isArray(issues) && issues.some(issue => issue.code === OPENCODE_PLUGIN_NOT_BUILT_CODE);
+}
+
+function getOpencodeBuildValidationIssues(context) {
+  return getInstallTargetAdapter('opencode').validate({
+    homeDir: context.homeDir,
+    repoRoot: context.repoRoot,
+  });
+}
+
+function buildOpencodePayload(repoRoot, buildRunner = execFileSync) {
+  buildRunner(process.execPath, [path.join(repoRoot, OPENCODE_BUILD_SCRIPT)], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+function formatBuildErrorMessage(error) {
+  const stderr = typeof error.stderr === 'string' ? error.stderr.trim() : '';
+  const stdout = typeof error.stdout === 'string' ? error.stdout.trim() : '';
+  return stderr || stdout || error.message || 'Failed to build OpenCode payload';
 }
 
 function getManagedOperations(state) {
@@ -876,7 +909,7 @@ function buildDoctorReport(options = {}) {
   };
 }
 
-function createRepairPlanFromRecord(record, context) {
+function createRepairPlanFromRecord(record, context, options = {}) {
   const state = record.state;
   if (!state) {
     throw new Error('No install-state available for repair');
@@ -908,7 +941,8 @@ function createRepairPlanFromRecord(record, context) {
     includeComponentIds: state.request.includeComponents || [],
     excludeComponentIds: state.request.excludeComponents || [],
     projectRoot: context.projectRoot,
-    homeDir: context.homeDir
+    homeDir: context.homeDir,
+    exemptValidationCodes: options.exemptValidationCodes || [],
   });
 
   return {
@@ -918,6 +952,22 @@ function createRepairPlanFromRecord(record, context) {
       installedAt: state.installedAt,
       lastValidatedAt: new Date().toISOString()
     }
+  };
+}
+
+function prepareRepairMigration(plan) {
+  const migration = prepareClaudeSkillMigration(plan);
+  return {
+    migration,
+    plan: {
+      ...plan,
+      operations: migration.finalState.operations,
+      statePreview: migration.finalState,
+      warnings: [
+        ...(Array.isArray(plan.warnings) ? plan.warnings : []),
+        ...migration.warnings,
+      ],
+    },
   };
 }
 
@@ -931,6 +981,9 @@ function repairInstalledStates(options = {}) {
     manifestVersion: manifests.modulesVersion,
     packageVersion: readPackageVersion(repoRoot)
   };
+  const buildOpencodeRunner = typeof options.buildOpencodePayload === 'function'
+    ? options.buildOpencodePayload
+    : buildOpencodePayload;
   const records = discoverInstalledStates({
     homeDir: context.homeDir,
     projectRoot: context.projectRoot,
@@ -950,7 +1003,51 @@ function repairInstalledStates(options = {}) {
     }
 
     try {
-      const desiredPlan = createRepairPlanFromRecord(record, context);
+      const needsOpencodeBuild = record.adapter.target === 'opencode'
+        && hasOpencodeBuildError(getOpencodeBuildValidationIssues(context));
+      const opencodeBuildRepairPath = path.join(context.repoRoot, OPENCODE_BUILD_ARTIFACT);
+
+      if (needsOpencodeBuild && options.dryRun) {
+        const rawPlan = createRepairPlanFromRecord(record, context, {
+          exemptValidationCodes: [OPENCODE_PLUGIN_NOT_BUILT_CODE],
+        });
+        const { plan: desiredPlan } = prepareRepairMigration(rawPlan);
+        const operationHealth = summarizeManagedOperationHealth(context.repoRoot, desiredPlan.operations);
+        const repairOperations = [...operationHealth.missing.map(entry => ({ ...entry.operation })), ...operationHealth.drifted.map(entry => ({ ...entry.operation }))];
+        const plannedRepairs = [opencodeBuildRepairPath, ...repairOperations.map(operation => operation.destinationPath)];
+
+        return {
+          adapter: record.adapter,
+          status: 'planned',
+          installStatePath: record.installStatePath,
+          repairedPaths: [],
+          plannedRepairs,
+          stateRefreshed: false,
+          warnings: desiredPlan.warnings,
+          error: null
+        };
+      }
+
+      if (needsOpencodeBuild) {
+        try {
+          buildOpencodeRunner(context.repoRoot);
+        } catch (error) {
+          return {
+            adapter: record.adapter,
+            status: 'error',
+            installStatePath: record.installStatePath,
+            repairedPaths: [],
+            plannedRepairs: [],
+            error: formatBuildErrorMessage(error)
+          };
+        }
+      }
+
+      const rawPlan = createRepairPlanFromRecord(record, context);
+      const {
+        migration,
+        plan: desiredPlan,
+      } = prepareRepairMigration(rawPlan);
       const operationHealth = summarizeManagedOperationHealth(context.repoRoot, desiredPlan.operations);
 
       if (operationHealth.missingSource.length > 0) {
@@ -960,12 +1057,20 @@ function repairInstalledStates(options = {}) {
           installStatePath: record.installStatePath,
           repairedPaths: [],
           plannedRepairs: [],
+          warnings: desiredPlan.warnings,
           error: `Missing source file(s): ${operationHealth.missingSource.map(entry => entry.sourcePath).join(', ')}`
         };
       }
 
       const repairOperations = [...operationHealth.missing.map(entry => ({ ...entry.operation })), ...operationHealth.drifted.map(entry => ({ ...entry.operation }))];
-      const plannedRepairs = repairOperations.map(operation => operation.destinationPath);
+      const legacyMigrationPaths = migration.legacyOperationsToRemove.map(
+        operation => operation.destinationPath
+      );
+      const plannedRepairs = [...new Set([
+        ...(needsOpencodeBuild ? [opencodeBuildRepairPath] : []),
+        ...repairOperations.map(operation => operation.destinationPath),
+        ...legacyMigrationPaths,
+      ])];
 
       if (options.dryRun) {
         return {
@@ -975,26 +1080,36 @@ function repairInstalledStates(options = {}) {
           repairedPaths: [],
           plannedRepairs,
           stateRefreshed: plannedRepairs.length === 0,
+          warnings: desiredPlan.warnings,
           error: null
         };
+      }
+
+      const hasLegacyMigration = migration.legacyOperationsToRemove.length > 0;
+      if (migration.requiresBridgeState && (repairOperations.length > 0 || hasLegacyMigration)) {
+        writeInstallState(desiredPlan.installStatePath, migration.bridgeState);
       }
 
       if (repairOperations.length > 0) {
         for (const operation of repairOperations) {
           executeRepairOperation(context.repoRoot, operation, record.targetRoot);
         }
-        writeInstallState(desiredPlan.installStatePath, desiredPlan.statePreview);
-      } else {
-        writeInstallState(desiredPlan.installStatePath, desiredPlan.statePreview);
       }
+      if (hasLegacyMigration) {
+        removeLegacyClaudeSkillFiles(migration, desiredPlan.targetRoot);
+      }
+      writeInstallState(desiredPlan.installStatePath, desiredPlan.statePreview);
 
       return {
         adapter: record.adapter,
-        status: repairOperations.length > 0 ? 'repaired' : 'ok',
+        status: (repairOperations.length > 0 || needsOpencodeBuild || hasLegacyMigration)
+          ? 'repaired'
+          : 'ok',
         installStatePath: record.installStatePath,
         repairedPaths: plannedRepairs,
         plannedRepairs: [],
         stateRefreshed: true,
+        warnings: desiredPlan.warnings,
         error: null
       };
     } catch (error) {
