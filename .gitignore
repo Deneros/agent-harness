@@ -24,3 +24,7 @@ state*.sqlite*
 **/node_modules/
 **/bin/
 *.sqlite*
+
+# El plugin compilado de OpenCode SI debe versionarse: el instalador lo exige
+!home/.opencode/dist/
+!home/.opencode/dist/**
