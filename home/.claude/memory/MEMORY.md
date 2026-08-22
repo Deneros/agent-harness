@@ -1,0 +1,2 @@
+- [Nicolás Profile](user_profile.md) — Backend dev, Cali Colombia, +4yr exp, loves Dokploy, no .NET
+- [ECC Harness Installed](ecc-harness-installed.md) — ECC installed globally (Claude/Codex/OpenCode); hooks dormant

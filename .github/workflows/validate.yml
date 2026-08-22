@@ -12,7 +12,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+
       - name: Check OpenCode plugin syntax
         run: node --check opencode/plugins/ecc-parity.js
-      - name: Scan tracked files for common secrets
-        run: "! git grep -nE '(ghp_|github_pat_|sk-[A-Za-z0-9]|api[_-]?key|password=)'"
+
+      - name: Check bootstrap syntax
+        run: bash -n bootstrap.sh
+
+      # Patrones anclados y con longitud realista. El regex anterior
+      # (sk-[A-Za-z0-9]) daba falso positivo dentro de "task-name",
+      # "disk-usage", etc. y habria roto el CI en cada push.
+      - name: Scan tracked files for secrets
+        run: |
+          ! git grep -nIE '(ghp_[A-Za-z0-9]{36}|github_pat_[A-Za-z0-9_]{22,}|sk-ant-[A-Za-z0-9_-]{20,}|\bsk-[A-Za-z0-9]{32,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY-----)'
+
+      - name: Ensure credentials are never tracked
+        run: |
+          ! git ls-files | grep -E '(\.credentials\.json|settings\.local\.json|\.pem$)'

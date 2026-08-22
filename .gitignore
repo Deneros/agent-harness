@@ -1,11 +1,21 @@
-node_modules/
-dist/
+# Secretos — jamás
+.credentials.json
+settings.local.json
+auth.json
+*.pem
 .env
 .env.*
+
+# Estado volátil / por máquina
 *.log
+node_modules/
+dist/
 coverage/
-auth.json
+**/cache/
+**/shell-snapshots/
+**/paste-cache/
+**/session-env/
+**/daemon/
 sessions/
-cache/
 metrics/
 state*.sqlite*

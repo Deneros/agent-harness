@@ -1,4 +1,4 @@
 # Claude Code
 
-Merge `settings.template.json` into the active Claude Code settings file.
-Register only hook commands available in your installed ECC runtime.
+La configuración real vive en `home/.claude/`. La instala `bootstrap.sh` desde
+la raíz del repositorio; no hay plantillas que mergear a mano.
