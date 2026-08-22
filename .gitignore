@@ -19,3 +19,8 @@ coverage/
 sessions/
 metrics/
 state*.sqlite*
+**/sessions/
+**/sqlite/
+**/node_modules/
+**/bin/
+*.sqlite*

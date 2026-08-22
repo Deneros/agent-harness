@@ -63,6 +63,24 @@ if [ -f "$SHARED" ]; then
   done
 fi
 
+# 3d. Codex y OpenCode (solo configuracion; sessions/sqlite/bin/node_modules quedan fuera)
+for h in codex opencode; do
+  [ -d "$SRC/.$h" ] || continue
+  mkdir -p "$HOME/.$h"
+  if [ "$h" = codex ]; then DIRS="skills agents mcp-configs memories"; FILES="config.toml AGENTS.md ecc-install-state.json"; else DIRS="skills scripts commands hooks tools prompts dist plugin"; FILES="opencode.json ecc-install-state.json AGENTS.md the-security-guide.md package.json"; fi
+  for d in $DIRS; do [ -d "$SRC/.$h/$d" ] && cp -a "$SRC/.$h/$d" "$HOME/.$h/"; done
+  for f in $FILES; do [ -f "$SRC/.$h/$f" ] && cp -a "$SRC/.$h/$f" "$HOME/.$h/$f"; done
+  # reescribir rutas absolutas del HOME de origen
+  ST="$HOME/.$h/ecc-install-state.json"
+  [ -f "$ST" ] && python3 -c "
+import sys
+p,home=sys.argv[1],sys.argv[2]
+raw=open(p).read()
+if '/home/nicol'!=home and '/home/nicol' in raw: open(p,'w').write(raw.replace('/home/nicol',home))
+" "$ST" "$HOME"
+  echo "==> $h instalado"
+done
+
 # 4. Ejecutables
 find "$HOME/.claude/scripts" -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
 

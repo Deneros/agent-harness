@@ -25,4 +25,14 @@ for h in "$HOME/.codex/skills" "$HOME/.opencode/skills"; do
 done | sort -u > "$(dirname "$DEST")/shared-skills.txt"
 echo "==> $(wc -l < "$(dirname "$DEST")/shared-skills.txt") skills compartidas registradas"
 
+
+# Codex y OpenCode: solo configuracion
+for h in codex opencode; do
+  [ -d "$HOME/.$h" ] || continue
+  if [ "$h" = codex ]; then DIRS="skills agents mcp-configs memories"; FILES="config.toml AGENTS.md ecc-install-state.json"; else DIRS="skills scripts commands hooks tools prompts dist plugin"; FILES="opencode.json ecc-install-state.json AGENTS.md the-security-guide.md package.json"; fi
+  mkdir -p "$DEST/.$h"
+  for d in $DIRS; do [ -d "$HOME/.$h/$d" ] && mkdir -p "$DEST/.$h/$d" && rsync -a --delete "$HOME/.$h/$d/" "$DEST/.$h/$d/"; done
+  for f in $FILES; do [ -f "$HOME/.$h/$f" ] && cp -a "$HOME/.$h/$f" "$DEST/.$h/$f"; done
+done
+
 echo "==> harness sincronizado al repo. Revisa 'git status' antes de commitear."
