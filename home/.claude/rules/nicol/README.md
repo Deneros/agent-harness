@@ -7,6 +7,8 @@ un reinstall.
 |---|---|
 | `common/api-security.md` | Diseño de API, DTOs, validación, autorización, PII, secretos, uploads |
 | `common/testing.md` | TDD por defecto, pirámide de tests, verificación por tipo de cambio |
+| `common/patterns.md` | Cuándo un patrón vale la pena y cuándo es sobreingeniería |
+| `common/architecture.md` | Decisiones estructurales por umbral: monolito modular, hexagonal, microservicios |
 | `react/engineering.md` | Estructura de módulos, server state, mutaciones, caché, UI optimista |
 | `react/ux.md` | Controles, formularios, tablas, filtros, estados vacíos, toasts, i18n |
 | `delivery/dokploy.md` | Entornos, migraciones, gates de despliegue, rollback |
