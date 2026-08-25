@@ -6,7 +6,7 @@ un reinstall.
 | Archivo | Alcance |
 |---|---|
 | `common/api-security.md` | Diseño de API, DTOs, validación, autorización, PII, secretos, uploads |
-| `common/testing.md` | TDD por defecto, pirámide de tests, verificación por tipo de cambio |
+| `common/testing.md` | TDD por defecto, pirámide de tests, diseño de cobertura antes de implementar, E2E reproducible por un usuario normal, verificación por tipo de cambio |
 | `common/patterns.md` | Cuándo un patrón vale la pena y cuándo es sobreingeniería |
 | `common/architecture.md` | Decisiones estructurales por umbral: monolito modular, hexagonal, microservicios |
 | `react/engineering.md` | Estructura de módulos, server state, mutaciones, caché, UI optimista |
