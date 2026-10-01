@@ -8,7 +8,7 @@
 - Use resource-oriented routes under `/api/v1`.
 - Use nouns for resources and HTTP verbs for actions.
 - Use command-style subroutes only when the domain action is meaningful:
-  `/hr/vacancies/{id}/transition`, `/scheduled-audits/{id}/auto-assign`.
+  `/orders/{id}/transition`, `/reports/{id}/auto-assign`.
 - Keep endpoint paths centralized in frontend service files.
 - Do not build API URLs directly inside React components.
 
@@ -17,7 +17,7 @@
 - Never expose JPA/domain entities directly from controllers.
 - Backend request/response DTO names must be mirrored by frontend types.
 - Frontend payload property names must match backend DTO fields exactly.
-- If a backend DTO expects `auditorId`, do not send `employeeId`.
+- If a backend DTO expects `ownerId`, do not send `creatorId`.
 - If the API shape changes, update backend DTO, controller/service, frontend
   type, frontend service, form payload, and tests in one PR.
 
@@ -33,10 +33,12 @@
 
 ## Authorization
 
-the project is migrating to granular permissions with scopes.
+If the project uses scoped/granular permissions, it declares where its
+role/permission matrix lives — in `AGENTS.md` (`## Conventions`) or the
+README that stands in for it — and that matrix is the reference before
+changing guards, seeders, policies, sidebars, or permission tests. If the
+project does not declare this, that absence is the first finding.
 
-- Read [../security/role-scope-matrix.md](../security/role-scope-matrix.md)
-  before changing guards, seeders, policies, sidebars, or permission tests.
 - Do not add new role-only `hasAnyRole` guards in migrated modules.
 - Do not use `hasAuthority(...) or hasPermission(...)` for scoped resources.
 - Per-id scoped endpoints must use `hasPermission(#id, 'ResourceType', 'ACTION')`.

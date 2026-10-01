@@ -1,17 +1,25 @@
 # UX Conventions
 
 > Mandatory UI/UX reference for frontend work.
-> Last updated: 2026-05-18.
+> Last updated: 2026-09-08.
 
 This document only covers user experience and interface conventions: controls,
 layout, interaction, visual states, copy, accessibility, and navigation.
 
 For React Query/cache/optimistic UI/data connectivity, read
-[docs/conventions/frontend-engineering-conventions.md](conventions/frontend-engineering-conventions.md).
-For API/security/testing/deployment, read [docs/conventions/README.md](conventions/README.md).
+[engineering.md](./engineering.md).
+For API/security/testing/deployment, read [../README.md](../README.md).
 
 If a PR violates these conventions, it gets rejected unless the deviation is
 explicitly justified and approved.
+
+**On the vocabulary used here.** Examples name components and classes from a
+Tailwind + shadcn/ui vocabulary, because that is the usual starting stack. They
+are illustrations, not requirements: a project built on plain CSS, its own token
+system, or another component library satisfies these rules with its own
+equivalents, and declares the mapping in its `AGENTS.md` (`## Conventions`). What
+is mandatory is the behaviour each rule describes — the affordance, the state,
+the feedback — never the import path.
 
 ---
 
@@ -21,21 +29,21 @@ explicitly justified and approved.
 use `Input type="text"` or `Input type="number"`. Use a picker, combobox, or
 `Select`.
 
-| Value being captured | Component to use |
+| Value category | Control to use |
 |---|---|
-| Employee / Auditor | `EmployeePicker` (`src/modules/hr/components/EmployeePicker.tsx`) |
-| Country / State / City | `LocationSelector` (`src/components/LocationSelector.tsx`) |
-| Job position / Cargo | `JobPositionPicker` or `AutoCompleteSelect` reading `/api/v1/job-positions` |
-| Employee type | `EmployeeTypePicker` (build it if missing; reads `employee_types`) |
-| Status / Type / Severity / Recommendation | `Select` from `@/components/ui/select` |
-| Date | `Calendar` + `Popover` |
+| Entity from a backend catalog or list (single) | Search-driven picker/combobox, not free text or a raw id |
+| Entity from a backend catalog or list (multiple) | Multi-select picker/combobox |
+| Closed enum: status, type, severity, classification | `Select` |
+| Boolean setting | `Switch` |
+| Single date | `Calendar` + `Popover` |
 | Date range | `Calendar` with `mode="range"` |
-| Boolean setting | `Switch` from `@/components/ui/switch` |
-| Standard / Norm | Combobox reading `/api/v1/standards` |
-| Technical area | Combobox reading `/api/v1/technical-areas` |
-| IAF sector | Combobox reading `/api/v1/iaf-sectors` |
-| Client | `ClientPicker` (build it if missing; same pattern as `EmployeePicker`) |
-| Scheduled audit | `ScheduledAuditPicker` (build it if missing) |
+| Dependent/cascading catalog value (one selection narrows the next) | Cascading picker/combobox, each level reading its own catalog |
+
+The concrete component for each category — which picker, which combobox, which
+endpoint it reads — is the project's to declare, in its `AGENTS.md` (section
+`## Conventions`) or in the README that serves that role. If the project has
+not declared this mapping, that is the first finding: surface it before
+building more closed-value inputs ad hoc.
 
 `Input` is acceptable only for genuinely free values: names, descriptions,
 notes, street address, email, phone, open numeric quantities such as hours or
@@ -57,22 +65,23 @@ Every picker must provide:
 ## 2. Primary Create Actions — Use FAB Consistently
 
 The action that creates the page's primary collection resource lives in a
-`FloatingActionButton` from `@/components/shared`, positioned bottom-right.
+floating action button, positioned bottom-right. Which component provides it is
+the project's to declare.
 
-Examples:
+Examples (illustrative pattern, not specific routes):
 
-- `/hr/employees` -> FAB to create employee.
-- `/hr/recruitment` -> FAB to create vacancy.
-- `/hr/training` -> FAB to create training record.
-- Detail routes such as `/hr/recruitment/:id` -> no FAB; use contextual section
-  actions.
+- A collection list route (e.g. a list of records) -> FAB creates the primary
+  resource.
+- A detail route for one item in that collection -> no FAB; use contextual
+  section actions instead.
 
 Header buttons are for filters, exports, view toggles, or context-specific
 actions, not for duplicating the FAB.
 
-Do not add a visible "Actualizar" button unless the data depends on an external
-process where the user genuinely needs to poll. Normal server-state refresh is a
-frontend engineering concern, not a visible workaround.
+Do not add a visible "Actualizar"/"Refresh" button unless the data depends on
+an external process where the user genuinely needs to poll. Normal
+server-state refresh is a frontend engineering concern, not a visible
+workaround.
 
 ---
 
@@ -90,18 +99,19 @@ frontend engineering concern, not a visible workaround.
 
 ### Validation And Feedback
 
-- Field errors appear below the field in `text-destructive`.
+- Field errors appear below the field, in the project's error text style.
 - Required validation happens on submit, not on blur.
-- Backend errors become Spanish user-facing copy, not raw `error.message`.
-- During submit, the primary button shows a spinner plus "Guardando...",
-  "Creando...", etc.
+- Backend errors become user-facing copy in the project's default language,
+  not raw `error.message`.
+- During submit, the primary button shows a spinner plus a state label
+  ("Guardando...", "Creando...", or the project's equivalent).
 - Disable the form during submission.
 
 ### Helper Text
 
 - Helper text belongs inside the field column, below the control.
 - Tooltips belong on a `?` icon next to the label.
-- Empty-state hints such as "seleccione un empleado primero" belong where the
+- Empty-state hints such as "select the parent record first" belong where the
   dependent content would appear, not under a random input in the grid.
 - Helper text must not push sibling inputs out of alignment.
 
@@ -111,22 +121,22 @@ If the label does not explain the business consequence, stop and clarify.
 
 Bad:
 
-- `Obligatoria?`
+- `Obligatorio?`
 - `Tipo`
 - `Estado`
 
 Good:
 
-- `Requerido para cerrar la brecha`
-- `Exige evidencia de asistencia`
-- `Estado de la vacante`
+- `Requerido para completar el registro`
+- `Determina qué plantilla de notificación se usa`
+- `Estado de la solicitud`
 
 ---
 
 ## 4. Loading Visuals
 
-Use `Skeleton` from `@/components/ui/skeleton` for page, panel, table, card, and
-form loading states.
+Use the project's skeleton component for page, panel, table, card, and form
+loading states.
 
 - Full-page loads: skeleton matching final layout.
 - Tables: row skeletons.
@@ -135,7 +145,7 @@ form loading states.
 - Avoid centered generic spinners on full pages.
 
 Data ownership and cache behavior are defined in
-[frontend-engineering-conventions.md](conventions/frontend-engineering-conventions.md).
+[engineering.md](./engineering.md).
 
 ---
 
@@ -155,14 +165,14 @@ Bad:
 <p>No results found.</p>
 ```
 
-Good:
+Good (illustrative content — swap the noun and copy for the real resource):
 
 ```tsx
 <EmptyState
-  icon={<Briefcase className="h-10 w-10 text-muted-foreground/40" />}
-  title="Sin vacantes creadas todavía"
-  description="Crea la primera vacante para que el motor sugiera candidatos."
-  cta={<Button onClick={onCreate}>Nueva vacante</Button>}
+  icon={<FolderOpen className="h-10 w-10 text-muted-foreground/40" />}
+  title="Sin proyectos creados todavía"
+  description="Crea el primer proyecto para empezar a trabajar."
+  cta={<Button onClick={onCreate}>Nuevo proyecto</Button>}
 />
 ```
 
@@ -172,14 +182,16 @@ Build a shared `EmptyState` component if the pattern is needed more than twice.
 
 ## 6. Tables
 
-Use `DataTableRoot` / `DataTableToolbar` / `DataTableUI` from
-`@/components/data-table`. Do not roll custom tables for CRUD/list pages.
+Use the project's table component for CRUD/list pages; do not roll custom
+tables. The project declares its table component (and any separate
+toolbar/filter pieces) in its `AGENTS.md` (`## Conventions`) or equivalent
+README; if it hasn't, that's the first finding.
 
 Required affordances:
 
 - Global filter when more than 5 rows are possible.
 - Sorting on at least one useful column.
-- Row actions in a `DropdownMenu` triggered by `MoreHorizontal`.
+- Row actions behind an overflow menu, not a row of naked icons.
 - Pagination with rows-per-page selector.
 - Table empty state following section 5.
 
@@ -195,7 +207,7 @@ Required affordances:
 - Filter controls must not erase unrelated in-progress form work.
 
 URL persistence and query keys are defined in
-[frontend-engineering-conventions.md](conventions/frontend-engineering-conventions.md).
+[engineering.md](./engineering.md).
 
 ---
 
@@ -208,9 +220,10 @@ a sidebar entry.
 
 ### Module Tabs
 
-Horizontal module nav belongs in the module layout, e.g. `HRLayout.tsx`.
-Labels use `t('module.nav.<id>')`; do not hardcode tab labels when the module
-already uses i18n.
+Horizontal module nav belongs in the module's own layout component (e.g. a
+`<Module>Layout.tsx` file), not scattered across pages. Labels use
+`t('module.nav.<id>')`; do not hardcode tab labels when the module already
+uses i18n.
 
 ### Breadcrumbs
 
@@ -221,12 +234,12 @@ are not clickable routes unless they represent the current page.
 
 ## 9. Toasts And Notifications
 
-Use `sonner` for transient feedback.
+Use the project's toast mechanism for transient feedback.
 
 | Situation | Component |
 |---|---|
-| Mutation succeeded | `toast.success("Vacante creada")` |
-| Network/validation error | `toast.error("No se pudo guardar la vacante")` |
+| Mutation succeeded | `toast.success("Registro creado")` (illustrative copy) |
+| Network/validation error | `toast.error("No se pudo guardar el registro")` (illustrative copy) |
 | Persistent blocking error | `<Alert variant="destructive">` |
 | Destructive confirmation | `<AlertDialog>` |
 | Per-row warning | `<Badge variant="warning">` |
@@ -237,38 +250,55 @@ Never use native `alert()`, `confirm()`, or `prompt()`.
 
 ## 10. Color And Severity Language
 
-| Concept | Color family | Tailwind classes |
-|---|---|---|
-| Success / Active / Available | Emerald | `text-emerald-700 bg-emerald-50 border-emerald-200` |
-| Warning / In-progress | Amber | `text-amber-700 bg-amber-50 border-amber-200` |
-| Error / Blocked / Severity HIGH | Rose | `text-rose-700 bg-rose-50 border-rose-200` |
-| Info / Neutral | Sky | `text-sky-700 bg-sky-50 border-sky-200` |
-| Suspended / Disabled | Slate | `text-slate-700 bg-slate-100 border-slate-200` |
-| Severity MEDIUM | Amber | same as warning |
-| Severity LOW | Slate | same as suspended |
+| Concept | Semantic role |
+|---|---|
+| Success / Active / Available | positive |
+| Warning / In-progress | warning |
+| Error / Blocked / Severity HIGH | danger / destructive |
+| Info / Neutral | informational |
+| Suspended / Disabled | muted / inactive |
+| Severity MEDIUM | same family as warning |
+| Severity LOW | same family as suspended/disabled |
 
-Status pills use `Badge` with `variant="outline"` plus the relevant color
-classes.
+The concrete values for each semantic role — Tailwind classes, CSS variables,
+or design tokens — are defined by the project's design system, declared in its
+`AGENTS.md` (`## Conventions`), its README, or its theme/token file. A
+dark-themed product with its own token system uses its tokens here, not a
+light-mode Tailwind palette borrowed from elsewhere. If the project hasn't
+declared this mapping, that's the first finding.
+
+Status pills use `Badge` with `variant="outline"` plus the project's styling
+for the matching semantic role. Color is never the only signal; pair it with
+text or an icon (see section 12).
 
 ---
 
 ## 11. Internationalization
 
-The app defaults to Spanish. All user-facing strings must be Spanish.
+The default language is declared by the project — in its `AGENTS.md`
+(`## Conventions`) or README. Do not hardcode a different language than the
+project's declared default (e.g. do not hardcode English copy into a
+Spanish-first product).
 
-Use `t()` for shared/strategic strings such as nav and common actions. Hardcoded
-Spanish is acceptable for new HR page bodies when the module already follows
-that convention. Do not hardcode English.
+If the project supports more than one language, every user-facing string must
+go through `t()`, and the dictionaries must not diverge — no key missing in
+one locale that exists in another. Enforce this with a test if the project
+doesn't already have one.
 
-Display dates and numbers with Spanish/Colombian formatting:
+Use `t()` for shared/strategic strings such as nav and common actions.
+Hardcoded strings in the project's default language are acceptable for page
+bodies only when the module already follows that convention consistently.
+
+Display dates and numbers with the project's locale formatting. Example
+(Spanish/Colombian shown only as illustration — use the project's actual
+locale):
 
 ```ts
 format(date, 'PPP', { locale: es });
 new Intl.NumberFormat('es-CO').format(1234);
 ```
 
-Payload date semantics are defined in
-[frontend-engineering-conventions.md](conventions/frontend-engineering-conventions.md).
+Payload date semantics are defined in [engineering.md](./engineering.md).
 
 ---
 
@@ -291,16 +321,17 @@ Before requesting review on frontend UI changes:
 - [ ] No raw id or enum text inputs.
 - [ ] Dates use `Calendar` + `Popover`, not text/date inputs.
 - [ ] Primary create action uses FAB where the page is a collection.
-- [ ] No unnecessary visible "Actualizar" button.
+- [ ] No unnecessary visible "Actualizar"/"Refresh" button.
 - [ ] Required fields marked with `*`.
 - [ ] Submit/cancel placement follows dialog convention.
 - [ ] Helper text does not break layout alignment.
 - [ ] Loading states use skeletons.
 - [ ] Empty states have icon, context, and next step.
-- [ ] Tables use `DataTableRoot` and expected affordances.
+- [ ] Tables use the project's table component and expected affordances.
 - [ ] Filters use selects/pickers and include clear action.
-- [ ] Toasts use `sonner`.
-- [ ] User-facing copy is Spanish.
+- [ ] Transient feedback uses the project's toast mechanism, not an ad-hoc one.
+- [ ] User-facing copy matches the project's declared default language, and
+      i18n dictionaries (if any) don't diverge.
 - [ ] Color/severity follows section 10.
 - [ ] Icon-only buttons have `aria-label`.
 - [ ] Desktop and mobile/narrow layouts were visually checked.
@@ -317,33 +348,7 @@ Before requesting review on frontend UI changes:
 
 ## Appendix: Component Gaps
 
-| Component | Status | Notes |
-|---|---|---|
-| `EmployeePicker` | Exists | `src/modules/hr/components/EmployeePicker.tsx` |
-| `LocationSelector` | Exists | `src/components/LocationSelector.tsx` |
-| `ClientPicker` | TODO | Same pattern as `EmployeePicker`; reads CRM clients |
-| `ScheduledAuditPicker` | TODO | For post-audit evaluation and audit references |
-| `JobPositionPicker` | TODO | Built on `AutoCompleteSelect` |
-| `EmployeeTypePicker` | TODO | Uses employee type catalog |
-| `StandardPicker` | TODO | Reads `/api/v1/standards` |
-| `TechnicalAreaPicker` | TODO | Reads `/api/v1/technical-areas` |
-| `IafSectorPicker` | TODO | Reads `/api/v1/iaf-sectors` |
-| `EmptyState` | TODO | Shared empty-state shell |
-| `MultiEmployeePicker` | Exists | `src/modules/hr/components/MultiEmployeePicker.tsx` — multi-select variant for batch operations (Training sessions, etc.) |
-
----
-
-## Appendix: Known tech debt — Training sessions (2026-05-19)
-
-The Training sessions module shipped with conscious gaps. They do **not**
-block the golden path but should be closed when the trigger condition lands.
-
-| Gap | Trigger to fix | Why deferred |
-|---|---|---|
-| Session list uses `<button>` rows instead of `DataTableRoot` | When sessions per year exceed ~20 (users need search/sort/pagination) | Same pattern as Recruitment; fine for low volume; avoids overengineering an MVP feature |
-| No "Edit session" dialog (only create/cancel) | First user request to correct a typo or shift a date on a PLANNED session | Backend `PUT /sessions/{id}` already exists; UI is a quick follow-up. For now HR cancels + recreates |
-| No exhaustive `aria-label` audit or keyboard-nav test on attendance toggles | A11y compliance push, or first screen-reader user complaint | Toggles are buttons inside a fieldset-equivalent context; basic keyboard works via Tab. Not formally verified |
-| Read-only state on closed sessions visually shown via `disabled={!isMutable}` but not explicitly tested with multi-attendee mixed states | When closing a session with > 1 attendee in mixed ATTENDED/NO_SHOW config in production | Service-layer logic covered by unit tests; UI render path lightly different |
-
-Triggers — not deadlines. If the use case never materialises, the debt
-stays parked. If it does, refer to this list as the starting point.
+Each project maintains its own list of UI component gaps (missing pickers,
+missing shared components) where it declares its conventions — typically its
+`AGENTS.md` or a project-local doc. This file does not track per-project
+component inventories.

@@ -11,7 +11,7 @@ Un despliegue, una base de datos, módulos con fronteras explícitas. Organiza p
 
 ```
 modules/invoicing/{api,domain,persistence}   ← todo lo de facturación junto
-modules/hr/{api,domain,persistence}
+modules/notifications/{api,domain,persistence}
 ```
 
 En vez de `controllers/ services/ repositories/` con todo mezclado.

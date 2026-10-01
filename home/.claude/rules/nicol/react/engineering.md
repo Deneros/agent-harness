@@ -164,7 +164,7 @@ marked as pending.
 
 Frontend DTOs must mirror backend contracts exactly.
 
-- If the backend expects `auditorId`, the frontend sends `auditorId`.
+- If the backend expects `ownerId`, the frontend sends `ownerId`.
 - If the backend exposes `evaluationType`, do not invent `type`.
 - If a field is optional in the backend, model it as optional or nullable
   intentionally in TypeScript.

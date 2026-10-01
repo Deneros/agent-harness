@@ -1,45 +1,51 @@
 # Release, Deployment, And Production Conventions
 
-> Applies to Docker, Dokploy, environment config, database migrations, releases,
-> production changes, and rollback planning.
+> Applies to Docker, Dokploy or an equivalent deployment platform, environment
+> config, database migrations, releases, production changes, and rollback
+> planning.
 
 ## Environments
 
-| Environment | Purpose | Notes |
+| Environment role | Purpose | Notes |
 |---|---|---|
-| Local/dev | Fast iteration | `./dev.sh`, Hibernate `ddl-auto=update` in dev profile |
-| Dokploy dev | Shared remote dev validation | `docker-compose.dokploy-dev*.yml` |
-| `prerelease` | Integration branch | Feature branches merge here before production promotion |
-| Production | Real users/data | `ddl-auto=validate`; Flyway currently disabled in prod config |
+| Local/dev | Fast iteration | Project declares its local run command and local schema strategy in `AGENTS.md` (`## Conventions`) or its README |
+| Shared remote dev | Team-visible validation before integration | Project declares its compose file(s)/deploy target |
+| Integration branch | Feature branches merge here before production promotion | Project declares the branch name |
+| Production | Real users/data | Project declares its schema-application policy — see Production Database Rule below |
+
+If the project does not declare these, that absence is itself a finding before
+relying on any assumed default.
 
 ## Production Database Rule
 
-Production currently has:
+The project declares, in `AGENTS.md` (`## Conventions`) or the README that
+stands in for it, who applies schema changes in production: the ORM/framework
+at boot, a migration tool, or a human running SQL by hand. If it does not
+declare this, that gap is the first finding — do not assume any specific
+tool's default (e.g. do not assume Hibernate `ddl-auto` or Flyway's own
+default behavior without checking).
 
-```properties
-spring.jpa.hibernate.ddl-auto=validate
-spring.flyway.enabled=false
-```
+Whatever the declared mechanism, these hold regardless:
 
-Implications:
-
-- Hibernate will not create/update production tables.
-- Flyway migrations in the repo do not automatically apply unless operations
-  enables Flyway or runs SQL manually.
-- Every schema change must include a migration file and a production application
-  plan.
-- Destructive migrations must use `IF EXISTS` / safe guards when environments may
-  differ.
-- Any production schema change must document manual SQL or Flyway enablement
-  steps.
+- Every schema change must include a migration file and a documented
+  production application plan.
+- Destructive migrations must use `IF EXISTS` / safe guards when environments
+  may differ.
+- Any production schema change must document the manual SQL or the
+  enablement/trigger steps that make it take effect in production.
+- Do not rely on a local ORM auto-update as proof that production is safe.
 
 ## Migration Convention
 
-- Add migrations under `aes-back/src/main/resources/db/migration/`.
-- Use the next free `V{N}__description.sql`.
+- Migrations live where the project declares in `AGENTS.md` (`## Conventions`)
+  or its README; if it does not declare a path, that absence is the first
+  finding.
+- Number and order migrations per the project's declared convention (e.g. the
+  next free `V{N}__description.sql`).
 - Keep migrations idempotent where reasonable (`IF EXISTS`, `IF NOT EXISTS`).
 - Separate destructive cleanup from additive changes when rollback risk differs.
-- Do not rely on local Hibernate update as proof that production is safe.
+- Do not rely on a local schema auto-sync (Hibernate `ddl-auto`, Django
+  auto-migrate, or equivalent) as proof that production is safe.
 - For data migrations, include pre-counts, post-counts, and rollback notes.
 
 ## Pre-Deployment Gate
@@ -47,10 +53,11 @@ Implications:
 Before deploying:
 
 - Superproject and submodules are clean.
-- Feature branch is based on current `prerelease`.
-- Backend targeted tests pass.
-- Frontend `npm run build` passes.
-- Critical Playwright/browser smoke paths pass.
+- Feature branch is based on the project's declared integration branch.
+- Targeted tests pass for every service the change touched.
+- The frontend production build passes, with the project's declared command.
+- Critical smoke paths pass, through the project's E2E runner or as documented
+  browser QA when it declares none.
 - New permissions are seeded and tested.
 - Migrations are reviewed and ordered.
 - Environment variables/secrets are documented.
@@ -63,7 +70,8 @@ Use this structure for any non-trivial deployment:
 1. Executive summary: what changes, why, affected users, risk level.
 2. Prerequisites: approvals, backups, secrets, image tags, migration readiness.
 3. Preflight checks: current health, logs, DB connectivity, S3/MinIO, CORS.
-4. Deployment steps: exact commands or Dokploy actions.
+4. Deployment steps: exact commands or actions in the project's deployment
+   platform (Dokploy is one example).
 5. Verification: health endpoint, login, affected module smoke, logs, metrics.
 6. Rollback: image rollback, schema rollback/manual compensation, feature flag off.
 7. Post-deploy watch: first 15 minutes, first hour, next business day.

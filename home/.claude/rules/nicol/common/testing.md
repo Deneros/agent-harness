@@ -17,13 +17,36 @@ explicitly a throwaway prototype or documentation-only.
 
 ## Test Pyramid
 
-| Layer | Purpose | Tools |
-|---|---|---|
-| Unit | Business rules, mappers, pure functions, hooks | JUnit, Vitest |
-| Contract/security | Permissions, DTO payloads, endpoint behavior | Spring tests, security tests |
-| Integration | Cross-service workflows, repository behavior, migrations | Spring Boot tests |
-| E2E | Critical user journeys only | Playwright |
-| Browser QA | Visual/interactive verification, auth/profile-dependent flows | Chrome/Google MCP or Playwright headed |
+| Layer | Purpose |
+|---|---|
+| Unit | Business rules, mappers, pure functions, hooks |
+| Contract/security | Permissions, DTO payloads, endpoint behavior |
+| Integration | Cross-service workflows, repository behavior, migrations |
+| E2E | Critical user journeys only |
+| Browser QA | Visual/interactive verification, auth/profile-dependent flows |
+
+The runner for each layer belongs to the project, not to this document. A layer
+with no runner declared is a gap to name, not an exemption to enjoy.
+
+## What The Project Declares
+
+These conventions say what must be verified and with what evidence. They do not
+say with which command, because two projects that share these rules do not share
+a build.
+
+Every project declares, in its `AGENTS.md` (`## Conventions`) or in the README
+that plays that role:
+
+| Declaration | What it has to answer |
+|---|---|
+| The test command per layer | How one targeted test is run, and from where: host, container, compose service |
+| Every service that carries tests | A repo with three services has three commands, not one |
+| Preconditions a suite needs | A live database, applied migrations, a built image, deterministic fixtures |
+| The E2E runner, or its absence | Which one, or the statement that documented browser QA takes its place |
+| Where the flow-coverage matrix lives | A file, a tracker, or the statement that the PR carries the record |
+
+A project that declares none of this is not exempt from these rules. The missing
+declaration is the first finding of any review that touches its tests.
 
 ## Design Coverage Before Implementation
 
@@ -74,7 +97,9 @@ oracle. Each journey specification must define:
 Use one E2E per distinct business objective. Perform the whole business
 precondition and action path through UI; API/DB fixtures belong only to contract
 tests and developer smokes, never to a claimed user E2E. Keep mutations in the
-isolated stack. Record each journey in the project's flow-coverage matrix.
+isolated stack. Record each journey wherever the project declares its
+flow-coverage matrix; if it declares none, the issue or PR carries the record and
+the missing matrix is itself a finding.
 
 ### Existing E2E Is Discovery Input, Not Automatic Coverage
 
@@ -99,20 +124,12 @@ flow-matrix entry is current. A clean build, a request listener, an optional
 assertion, or a manually refreshed empty list is not evidence that a feature
 works.
 
-## Backend Tests
+## Service And Backend Tests
 
-Backend uses Java 21 and Gradle. The host may not have JDK 21, so prefer the
-backend container or a JDK 21 Docker image.
-
-Targeted examples:
-
-```bash
-# Inside the backend container
-./gradlew test --tests com.aes.erp.hr.application.service.HrAssignabilityServiceTest
-
-# From project root when dev compose is running
-docker compose -f docker-compose.dev.yml exec backend ./gradlew test --tests '*HrAssignability*'
-```
+Run each suite the way the project declares it, not the way the host makes
+convenient. Toolchains drift — a host missing the right runtime, a suite that
+only runs inside the built image, a database the tests expect already migrated —
+and "it did not run on my machine" is evidence of nothing.
 
 Rules:
 
@@ -120,11 +137,16 @@ Rules:
   repository, and API contract.
 - For authorization changes, cover positive and negative paths.
 - For schema changes, verify entity mapping and migration assumptions.
-- Do not accept "compile only" as backend verification for behavior changes.
+- A repo with more than one service verifies every service it touched. A service
+  written in another language is not exempt because its runner is different.
+- When a suite needs infrastructure (a database, a broker, object storage, a
+  built image), that precondition belongs in the project's declaration. Skipping
+  the suite silently and reporting green is worse than reporting it could not run.
+- Do not accept "compile only" as verification for behavior changes.
 
 ## Frontend Unit And Component Tests
 
-Use Vitest and React Testing Library for:
+Use the project's component-test runner for:
 
 - Query hooks with non-trivial loading/empty/error behavior.
 - Forms with validation and payload mapping.
@@ -132,22 +154,16 @@ Use Vitest and React Testing Library for:
 - Components that hide/disable actions by permissions or business state.
 - Complex filters, date handling, or optimistic UI rollback.
 
-Commands:
-
-```bash
-cd aes-front
-npm run test
-npm run build
-```
+Run the project's declared test and build commands before requesting review. A
+clean type-check is neither of them.
 
 ## E2E Tests
 
-Use Playwright for critical workflows:
+Reserve E2E for critical journeys:
 
 - Login and role-gated navigation.
 - Create/update/transition flows that cross backend and frontend.
-- Scheduling, assignability, recruitment conversion, audit execution, QASF/CRM
-  workflows with business state transitions.
+- Any flow whose business state advances across a module or actor boundary.
 
 Rules:
 
@@ -157,14 +173,10 @@ Rules:
 - Keep E2E focused; not every field needs an E2E test.
 - Update or delete E2E tests when modules are intentionally removed.
 
-Commands:
-
-```bash
-cd aes-front
-npx playwright test e2e/<module>/
-npx playwright test e2e/<module>/<file>.spec.ts --headed
-npx playwright show-report
-```
+If the project declares an E2E runner, use it and its commands. If it declares
+none, the journey is covered by documented browser QA (next section), and the
+absence of a runner is recorded as a gap — never treated as coverage that
+happens to be invisible.
 
 ## Browser QA With Chrome/Google MCP
 
@@ -179,8 +191,11 @@ Use Chrome/Google MCP when a UI change needs real browser validation, especially
 Rules:
 
 - Prefer Chrome MCP for interactive smoke validation after implementation.
-- Use Playwright for repeatable automated E2E coverage.
-- If Chrome MCP is unavailable, use Playwright headed mode and screenshots.
+- Use the project's E2E runner for repeatable automated coverage; browser QA
+  complements it, it does not replace it.
+- If Chrome MCP is unavailable, drive the E2E runner in headed mode and capture
+  screenshots. A project with no runner falls back to manual browser QA, and the
+  report says so.
 - Do not inspect cookies, passwords, local storage, or unrelated browser data.
 - Do not perform destructive production actions through browser automation
   without explicit user approval.
@@ -242,13 +257,14 @@ Minimum browser QA for frontend PRs:
 
 | Change | Minimum verification |
 |---|---|
-| Backend business rule | Targeted JUnit test, compile/test for touched area |
+| Backend or service business rule | Targeted unit test at that service's layer |
 | Permission change | Security/contract tests for allowed and denied paths |
-| Frontend form | Vitest/component test for payload + browser smoke |
-| React Query mutation | Test or inspect cache update/invalidation |
+| Frontend form | Component test for payload mapping + browser smoke |
+| Server-state mutation | Test or inspect cache update/invalidation |
 | New table/list page | Browser smoke + loading/empty state review |
-| Critical workflow | Playwright E2E or documented browser MCP smoke |
-| Schema change | Migration review + backend mapping test |
+| Critical workflow | Full-journey E2E, or documented browser QA when no runner exists |
+| Schema change | Migration review + mapping test on the owning service |
+| Cross-service contract | Types/DTOs updated on both sides in the same change, with a test on each |
 
 ## Reporting Test Results
 
