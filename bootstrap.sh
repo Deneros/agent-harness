@@ -81,7 +81,18 @@ if '/home/nicol'!=home and '/home/nicol' in raw: open(p,'w').write(raw.replace('
   echo "==> $h instalado"
 done
 
-# 4. Ejecutables
+# 4. Pi: configuración y extensiones (sin auth, sesiones ni estado local)
+if [ -d "$SRC/.pi/agent" ]; then
+  mkdir -p "$HOME/.pi/agent"
+  cp -a "$SRC/.pi/agent/settings.json" "$HOME/.pi/agent/settings.json"
+  if [ -d "$SRC/.pi/agent/extensions" ]; then
+    mkdir -p "$HOME/.pi/agent/extensions"
+    cp -a "$SRC/.pi/agent/extensions/." "$HOME/.pi/agent/extensions/"
+  fi
+  echo "==> Pi instalado (configuración y extensiones)"
+fi
+
+# 5. Ejecutables
 find "$HOME/.claude/scripts" -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
 
 echo

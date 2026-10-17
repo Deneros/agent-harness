@@ -1,7 +1,7 @@
 # Agent Harness
 
-Snapshot portable y reproducible de mi harness de Claude Code. Un `git clone` y
-un `./bootstrap.sh` dejan una máquina nueva idéntica a la actual.
+Snapshot portable y reproducible de mi harness de Claude Code y Pi. Un `git clone` y
+un `./bootstrap.sh` dejan una máquina nueva configurada para ambos.
 
 **Repositorio privado.** Contiene configuración personal, memoria del agente y
 la postura de seguridad completa (hooks y permisos). No hacer público.
@@ -20,6 +20,9 @@ home/.claude/
   ecc/              install-state.json — manifiesto de lo que ECC gestiona
   memory/           memoria persistente del agente
 home/.agents/skills/  32 skills (destino real de los symlinks de skills/)
+home/.pi/agent/
+  settings.json       paquetes/modelo por defecto (sin deviceId ni credenciales)
+  extensions/         extensiones propias de Pi
 ```
 
 Las skills propias van como symlinks relativos hacia `.agents/skills`, así que
@@ -32,6 +35,7 @@ git clone git@github.com:Deneros/agent-harness.git
 cd agent-harness
 ./bootstrap.sh      # Linux, macOS, WSL
 claude login        # las credenciales nunca se sincronizan
+# Pi usa su autenticación local; vuelve a autenticarte en cada máquina si hace falta.
 ```
 
 El bootstrap es idempotente: respalda lo que va a pisar en
@@ -56,6 +60,8 @@ git add -A && git commit -m "chore: sync desde <máquina>" && git push
 | Logs, cachés, métricas, snapshots de shell | Estado local por máquina |
 
 Overrides propios de una máquina: `~/.claude/settings.local.json`, ignorado por git.
+Pi sincroniza únicamente `settings.json` sin `deviceId` y las extensiones propias;
+`auth.json`, sesiones, paquetes descargados, cachés y modelos locales quedan fuera.
 
 ## Detalles de portabilidad
 

@@ -12,6 +12,23 @@ done
 cp -a "$HOME/.claude/settings.json" "$DEST/.claude/settings.json"
 rsync -a --delete "$HOME/.agents/skills/" "$DEST/.agents/skills/"
 
+# Pi: guardar solo settings sin identificador local y extensiones propias.
+if [ -f "$HOME/.pi/agent/settings.json" ]; then
+  mkdir -p "$DEST/.pi/agent"
+  python3 - "$HOME/.pi/agent/settings.json" "$DEST/.pi/agent/settings.json" <<'PYEOF'
+import json,sys
+settings=json.load(open(sys.argv[1]))
+settings.pop('deviceId',None)
+with open(sys.argv[2],'w') as f:
+    json.dump(settings,f,indent=2)
+    f.write('\n')
+PYEOF
+fi
+if [ -d "$HOME/.claude/.pi/extensions" ]; then
+  mkdir -p "$DEST/.pi/agent/extensions"
+  rsync -a --delete "$HOME/.claude/.pi/extensions/" "$DEST/.pi/agent/extensions/"
+fi
+
 SLUG=$(printf '%s' "$HOME" | tr '/' '-')
 MEM="$HOME/.claude/projects/$SLUG/memory"
 [ -d "$MEM" ] && rsync -a --delete "$MEM/" "$DEST/.claude/memory/"
