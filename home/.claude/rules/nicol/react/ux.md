@@ -1,3 +1,11 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+  - "**/*.dart"
+---
 # UX Conventions
 
 > Mandatory UI/UX reference for frontend work.

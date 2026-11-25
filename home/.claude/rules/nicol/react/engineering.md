@@ -1,3 +1,10 @@
+---
+paths:
+  - "**/*.ts"
+  - "**/*.tsx"
+  - "**/*.js"
+  - "**/*.jsx"
+---
 # Frontend Engineering Conventions
 
 > Applies to React code, frontend services, query hooks, mutations, cache

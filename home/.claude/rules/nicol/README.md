@@ -25,6 +25,8 @@ proyecto (ver abajo).
 `engineering-workflow-conventions.md` se queda en aes-scaffold: describe su
 layout de submódulos y worktrees, no es reutilizable.
 
+`react/engineering.md` y `react/ux.md` llevan `paths:`: solo se cargan al trabajar con archivos de frontend (`.ts`, `.tsx`, `.js`, `.jsx`; `ux.md` también `.dart`), igual que las reglas de ECC por lenguaje. En sesiones de backend o infraestructura no ocupan contexto.
+
 ## Lo que declara cada proyecto
 
 Estas reglas dicen **qué** hay que cumplir y con **qué evidencia**. El **cómo**
