@@ -106,17 +106,12 @@ quitar su id de `ECC_DISABLED_HOOKS`. Rollback completo: borrar el bloque `env`
 ## `mcpServers` no se versiona
 
 `update.sh` quita `mcpServers` del `settings.json` del repo y `bootstrap.sh`
-conserva el que ya exista en la máquina. Motivo: la URL de Artiforge lleva un
-token (`pat=`) y no debe estar en git. En cada máquina, añadir Artiforge a mano
-**sin escribir el token en el repo**:
+conserva el que ya exista en la máquina. Motivo: las URLs de servidores MCP
+suelen llevar tokens y no deben estar en git. Un MCP con credenciales se añade
+en cada máquina con `claude mcp add --scope user`, que lo guarda en
+`~/.claude.json` local, fuera del repo.
 
-```bash
-claude mcp add --transport http --scope user Artiforge "https://tools.artiforge.ai/mcp?pat=$ARTIFORGE_PAT"
-```
-
-con `ARTIFORGE_PAT` exportado solo en esa shell (o pegado en el prompt), de modo
-que quede en `~/.claude.json` local, fuera del repo. El token que estuvo en el
-historial de git debe considerarse comprometido: rotarlo.
+Artiforge se retiró el 2026-11-25: ya no se usa en ninguna máquina.
 
 ## Actualizar las otras máquinas (Acris, escritorio WSL, Arch)
 
@@ -136,7 +131,7 @@ ls ~/.claude/skills-library | wc -l                                             
 - El primer `ls` no debe mostrar "Fact-Forcing Gate"; un Edit de un archivo nuevo pasa.
 - `rm -rf /tmp/prueba` y `git push --force` siguen pidiendo hechos o los rechaza el `deny`.
 - Linux/WSL: los hooks resuelven la raíz por `~/.claude` (la ruta base64 está neutralizada).
-- Artiforge (si está) vive en `~/.claude.json`, que el bootstrap no toca; un `mcpServers` antiguo en `settings.json` también se conserva.
+- Los MCP de cada máquina viven en `~/.claude.json`, que el bootstrap no toca; un `mcpServers` antiguo en `settings.json` también se conserva.
 
 `update.sh` borra con `rsync --delete`: ejecutarlo solo desde la máquina de
 referencia, porque una máquina con menos skills de Codex/OpenCode las eliminaría
