@@ -57,9 +57,10 @@ if [ -f "$STATE" ]; then
 import sys
 path,home=sys.argv[1],sys.argv[2]
 raw=open(path).read()
-old="/home/nicol"
-if old!=home and old in raw:
-    open(path,'w').write(raw.replace(old,home))
+import re
+new=re.sub(r'(?:/Users|/home)/[^/"]+/\.claude',home+'/.claude',raw)
+if new!=raw:
+    open(path,'w').write(new)
     print(f"==> install-state.json reescrito a {home}")
 PYEOF
 fi
@@ -106,6 +107,9 @@ if [ -d "$SRC/.pi/agent" ]; then
   fi
   echo "==> Pi instalado (configuración y extensiones)"
 fi
+
+# 4b. Recorte de ECC a lo diario (idempotente; repetir tras cualquier reinstalacion de ECC)
+"$(dirname "$SRC")/prune-ecc.sh" "$HOME/.claude"
 
 # 5. Ejecutables
 find "$HOME/.claude/scripts" -name '*.sh' -exec chmod +x {} + 2>/dev/null || true
