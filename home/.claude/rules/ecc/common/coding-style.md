@@ -1,8 +1,8 @@
 # Coding Style
 
-## Immutability (CRITICAL)
+## Immutability (preference)
 
-ALWAYS create new objects, NEVER mutate existing ones:
+PREFER creating new objects over mutating existing ones (follow the language or ORM idiom where mutation is natural):
 
 ```
 // Pseudocode

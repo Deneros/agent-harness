@@ -1,7 +1,7 @@
 # Patrones: cuándo valen la pena
 
-> Complementa [../../ecc/common/patterns.md](../../ecc/common/patterns.md), que
-> prescribe patrones sin contrapartida, y aplica la escalera de
+> Sustituye el catálogo de patrones de ECC (Repository y envelope de API
+> prescritos sin contrapartida, ya retirado) y aplica la escalera de
 > [../../ecc/common/simplicity.md](../../ecc/common/simplicity.md).
 
 Un patrón es una compra: pagas indirección a cambio de algo. Si no sabes qué

@@ -47,7 +47,7 @@ defer:
 
 ## Precedence
 
-Per [README.md](../README.md), specific overrides general. This rule governs
+Per [../nicol/README.md](../../nicol/README.md), specific overrides general. This rule governs
 solution shape only.
 
 | Conflict | Winner |
@@ -69,8 +69,8 @@ each stay under the ceiling and each justify their own existence.
 
 ## Proportionality of Process
 
-[development-workflow.md](./development-workflow.md) defines the full pipeline:
-research and reuse, planner, TDD, code review. Run it in full for features,
+The full pipeline (research and reuse, planning, TDD, code review) applies
+in full for features,
 refactors, and anything hitting a security trigger from
 [code-review.md](./code-review.md).
 
