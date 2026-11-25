@@ -13,6 +13,7 @@ un reinstall.
 | `react/ux.md` | Controles, formularios, tablas, filtros, estados vacíos, toasts, i18n |
 | `delivery/dokploy.md` | Entornos, migraciones, gates de despliegue, rollback (Dokploy es un ejemplo de plataforma, no el supuesto) |
 | `delivery/versioning.md` | Una versión por producto, SemVer con significado operativo, tags e imágenes, artefacto de release, ventana de soporte |
+| `delivery/changelog.md` | `CHANGELOG.md` por repo con `[Sin publicar]`, changelog de producto en el superproyecto, tipos de entrega (normal, grande, hotfix, publicación) |
 
 Origen: `aes-scaffold/docs/`. La generalización estuvo a medias hasta el
 2026-09-08: quedaban comandos, rutas, componentes y entidades de ese repo dentro
@@ -42,6 +43,7 @@ reglas no comparten build, ni sistema de diseño, ni plataforma de despliegue.
 | Nombres de entornos y plataforma de despliegue | `delivery/dokploy.md` |
 | Registro de imágenes, dónde vive el tag de release y qué lo dispara | `delivery/versioning.md` |
 | Qué líneas reciben parches y dónde se registra cada instalación de cliente | `delivery/versioning.md` |
+| Rama de trabajo, directorio de planes y superproyecto con el changelog de producto | `delivery/changelog.md` |
 | Mapa categoría de valor → componente, y sistema de color | `react/ux.md` |
 | Dónde vive su matriz de roles y permisos | `common/api-security.md` |
 | Idioma por defecto del producto y si hay i18n | `react/ux.md` |
