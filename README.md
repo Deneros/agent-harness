@@ -164,3 +164,11 @@ Pi sincroniza únicamente `settings.json` sin `deviceId` y las extensiones propi
 ## Terceros
 
 ECC, ponytail y las skills de Emil Kowalski se incluyen bajo MIT. Ver [NOTICE.md](NOTICE.md).
+
+## Validación local (sin CI)
+
+No hay GitHub Actions. Las comprobaciones (sintaxis de los scripts, búsqueda de secretos y de archivos de credenciales versionados) se ejecutan con `./validar.sh`, y en cada commit con el hook que instala `./validar.sh --instalar-hook` (una vez por clon).
+
+## Skills de marketing de terceros
+
+13 skills de [coreyhaines31/marketingskills](https://github.com/coreyhaines31/marketingskills) (MIT) copiadas sin modificar en `home/.agents/skills/` y fijadas a un commit revisado (ver `ORIGEN.md` de cada una): prospecting, cold-email, customer-research, competitor-profiling, competitors, sales-enablement, revops, offers, pricing, lead-magnets, emails, copywriting, marketing-plan. Para actualizarlas, copiar desde un commit nuevo tras revisarlo. Las de ComposioHQ/awesome-claude-skills (lead-research-assistant, meeting-insights-analyzer) no se copian: ese repo no tiene licencia.
