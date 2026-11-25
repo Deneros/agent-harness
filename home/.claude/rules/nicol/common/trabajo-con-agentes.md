@@ -30,6 +30,15 @@
 - Revisa lo que entrega un agente (tests, capturas, diff de seguridad) antes de
   desplegar. Su resumen no es evidencia.
 
+## Nada se pierde entre sesiones
+
+- La fuente de verdad de lo pendiente es `operaciones/docs/pendientes.md`. Toda
+  propuesta aceptada, compromiso ("lo hacemos después", "mañana"), decisión que
+  espera a Nicolás o fecha acordada **entra ahí antes de cerrar la tarea**, con
+  su siguiente paso. Lo que solo vive en el chat se pierde al compactar o cerrar.
+- Al empezar una sesión de operaciones o procesos, lee ese archivo primero.
+- Al terminar algo, márcalo `hecho` en el mismo commit.
+
 ## Contexto y accesos
 
 - Antes de preguntar "¿cómo entro a X?" o "¿cuál es el endpoint?", busca en
