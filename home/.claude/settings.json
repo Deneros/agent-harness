@@ -1,6 +1,12 @@
 {
   "includeCoAuthoredBy": false,
   "model": "opus[1m]",
+  "env": {
+    "GATEGUARD_BASH_ROUTINE_DISABLED": "1",
+    "ECC_SESSION_START_CONTEXT": "off",
+    "ECC_CONTEXT_MONITOR_COST_WARNINGS": "off",
+    "ECC_DISABLED_HOOKS": "pre:edit-write:gateguard-fact-force,pre:edit-write:suggest-compact,pre:observe,post:observe:continuous-learning,pre:governance-capture,post:governance-capture,pre:mcp-health-check,post:mcp-health-check,pre:bash:auto-tmux-dev,post:bash:command-log-audit,post:bash:command-log-cost,post:edit:design-quality-check,post:edit:accumulator,post:session-activity-tracker,post:quality-gate,stop:format-typecheck,stop:check-console-log,stop:evaluate-session,stop:session-end,pre:compact"
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -331,5 +337,14 @@
       "routine under /Users/myrighthand/ prefix: file edits to .claude/agents/*.md and related local config are routine"
     ]
   },
-  "description": "Impeccable design detector: immediate-tier checks after Edit/Write on UI files, full-rule deep pass on Stop."
+  "description": "Impeccable design detector: immediate-tier checks after Edit/Write on UI files, full-rule deep pass on Stop.",
+  "permissions": {
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(rm -rf /)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/)"
+    ]
+  }
 }
