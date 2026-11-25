@@ -4,11 +4,13 @@ description: >
   Pedirle algo a Hermes (el agente de operaciones que vive en Acris) desde cualquier
   equipo del tailnet por SSH, con el relay de verbos cerrados. Úsala cuando alguien
   quiera pedirle algo a Hermes, ver el estado de sus tareas, ejecutar ya una tarea de
-  Acris (salud de aplicaciones, vulnwatch, respaldos, restauración de prueba, espejo
-  de evidencias), consultar o marcar una corrección de vulnwatch (en curso, resuelta,
-  excepción aceptada, reabrir), avisar o mandar un mensaje por Telegram a través de
+  Acris (salud de aplicaciones, vulnwatch, errwatch, respaldos, restauración de prueba,
+  espejo de evidencias), consultar o marcar una corrección de vulnwatch (en curso,
+  resuelta, excepción aceptada, reabrir), consultar o marcar un error de producción de
+  errwatch (resuelto, ignorado, reabrir), avisar o mandar un mensaje por Telegram a través de
   Hermes, o hacerle un encargo abierto. También con "dile a Hermes", "pídele a Hermes",
-  "hermes-relay", "relay de Acris", "marca resuelto X en vulnwatch" o "avísame por Telegram".
+  "hermes-relay", "relay de Acris", "marca resuelto X en vulnwatch", "ignora el error X de
+  errwatch", "qué errores hay en producción" o "avísame por Telegram".
   No sirve para crear, editar o borrar tareas de Hermes ni para cambiar su configuración.
 ---
 
@@ -42,6 +44,11 @@ ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay
 ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay vulnwatch marcar dokploy resuelto'
 ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay vulnwatch excepcion pillow-mrh --motivo "solo en tests" --revisar 2027-01-15'
 ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay vulnwatch reabrir dokploy --nota "reapareció"'
+ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay errwatch listar'
+ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay errwatch ver e4d3fe8b46'
+ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay errwatch marcar e4d3fe8b46 resuelto --nota "corregido en v1.4.2"'
+ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay errwatch marcar e4d3fe8b46 ignorado --nota "cliente que corta la conexión"'
+ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay errwatch reabrir e4d3fe8b46 --nota "volvió a pasar"'
 ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay avisar "Despliegue de AuditGlow terminado"'
 ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay encargo "<pedido abierto>"'
 ```
@@ -54,6 +61,9 @@ ssh -o BatchMode=yes acris@100.68.192.64 '~/operaciones/acris/relay/hermes-relay
 | `vulnwatch marcar <id> en_curso\|resuelto` | Avanzar una corrección | `resuelto` se rechaza si la última foto aún ve el hallazgo: es correcto, no lo fuerces |
 | `vulnwatch excepcion <id> --motivo M --revisar AAAA-MM-DD` | Aceptar el riesgo | Motivo de hasta 300 caracteres; revisión entre mañana y 180 días |
 | `vulnwatch reabrir <id>` | Reabrir una resuelta o en excepción | |
+| `errwatch listar` / `ver <id>` | Errores de producción activos / detalle con la traza redactada | Solo lectura; id de 4 a 10 caracteres hexadecimales (un prefijo vale) |
+| `errwatch marcar <id> resuelto\|ignorado` | Cerrar un error | `resuelto`: si vuelve a ocurrir se reabre y avisa. `ignorado`: no vuelve a avisar nunca; úsalo solo si el usuario lo pide |
+| `errwatch reabrir <id>` | Reabrir un resuelto o ignorado | |
 | `avisar "<texto>"` | Un mensaje al Telegram de Hermes, firmado con tu identidad | Una vez; no lo repitas para "confirmar" |
 | `encargo "<texto>"` | Pedido abierto a Hermes con reglas fijas | **Gasta modelo**, hasta 30 min; último recurso |
 
@@ -63,7 +73,7 @@ por qué); código `1` = se intentó y falló. Informa al usuario el mensaje tal
 ## Qué no hacer
 
 - **No uses `encargo` para lo que resuelve un verbo mecánico.** Ver tareas → `estado`; lanzar una tarea →
-  `ejecutar`; correcciones → `vulnwatch`; avisar → `avisar`. `encargo` es solo para lo que exige criterio de
+  `ejecutar`; correcciones → `vulnwatch`; errores de producción → `errwatch`; avisar → `avisar`. `encargo` es solo para lo que exige criterio de
   Hermes, y conviene confirmarlo con el usuario antes porque gasta modelo.
 - **Nada de secretos**: no pongas contraseñas, tokens, llaves ni valores de `.env` en avisos ni encargos, ni
   pidas a Hermes que los muestre. No leas `~/.hermes/.env` ni `config.yaml` de Acris.
