@@ -64,8 +64,12 @@ PYEOF
 SLUG=$(printf '%s' "$HOME" | tr '/' '-')
 MEM="$HOME/.claude/projects/$SLUG/memory"
 mkdir -p "$MEM"
-cp -a "$SRC/.claude/memory/." "$MEM/"
-echo "==> memoria instalada en $MEM"
+if [ -d "$SRC/.claude/memory" ]; then
+  cp -a "$SRC/.claude/memory/." "$MEM/"
+  echo "==> memoria instalada en $MEM"
+else
+  echo "==> sin memoria en el repo (no se versiona): se conserva la local"
+fi
 
 # 3b. install-state.json guarda rutas absolutas del HOME de origen: reescribirlas
 STATE="$HOME/.claude/ecc/install-state.json"
