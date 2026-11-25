@@ -126,7 +126,7 @@ ls ~/.claude/skills-library | wc -l                                             
 - El primer `ls` no debe mostrar "Fact-Forcing Gate"; un Edit de un archivo nuevo pasa.
 - `rm -rf /tmp/prueba` y `git push --force` siguen pidiendo hechos o los rechaza el `deny`.
 - Linux/WSL: los hooks resuelven la raíz por `~/.claude` (la ruta base64 está neutralizada).
-- Si hay Artiforge en esa máquina, comprobar que `mcpServers` sigue en su `settings.json`.
+- Artiforge (si está) vive en `~/.claude.json`, que el bootstrap no toca; un `mcpServers` antiguo en `settings.json` también se conserva.
 
 `update.sh` borra con `rsync --delete`: ejecutarlo solo desde la máquina de
 referencia, porque una máquina con menos skills de Codex/OpenCode las eliminaría
