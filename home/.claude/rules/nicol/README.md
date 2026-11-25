@@ -9,6 +9,7 @@ un reinstall.
 | `common/testing.md` | TDD por defecto, pirámide de tests, diseño de cobertura antes de implementar, E2E reproducible por un usuario normal, verificación por tipo de cambio |
 | `common/patterns.md` | Cuándo un patrón vale la pena y cuándo es sobreingeniería |
 | `common/architecture.md` | Decisiones estructurales por umbral: monolito modular, hexagonal, microservicios |
+| `common/trabajo-con-agentes.md` | Autonomía (plan aprobado = ejecutado; cuándo parar), delegar en subagentes, accesos y secretos, comunicación, costos |
 | `react/engineering.md` | Estructura de módulos, server state, mutaciones, caché, UI optimista |
 | `react/ux.md` | Controles, formularios, tablas, filtros, estados vacíos, toasts, i18n |
 | `delivery/dokploy.md` | Entornos, migraciones, gates de despliegue, rollback (Dokploy es un ejemplo de plataforma, no el supuesto) |
