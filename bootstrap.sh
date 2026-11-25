@@ -5,7 +5,13 @@ SRC="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/home"
 STAMP=$(date +%Y%m%d-%H%M%S)
 BACKUP="$HOME/.claude-backup-$STAMP"
 
-echo "==> destino: $HOME"
+# HARNESS_ONLY limita qué se instala: "claude" deja intactos Codex, OpenCode y Pi
+# (para máquinas donde otro sistema, p. ej. Hermes, depende de su configuración).
+# Valores: lista separada por espacios de claude, codex, opencode, pi. Por defecto, todo.
+ONLY="${HARNESS_ONLY:-claude codex opencode pi}"
+instala() { case " $ONLY " in *" $1 "*) return 0;; *) return 1;; esac; }
+
+echo "==> destino: $HOME (instala: $ONLY)"
 
 # 1. Respaldar lo que vamos a pisar
 if [ -d "$HOME/.claude" ]; then
@@ -14,6 +20,17 @@ if [ -d "$HOME/.claude" ]; then
     [ -e "$HOME/.claude/$d" ] && cp -r "$HOME/.claude/$d" "$BACKUP/" || true
   done
   echo "==> respaldo en $BACKUP"
+fi
+# Respaldo de la configuración de Codex, OpenCode y Pi que se va a pisar (sin sesiones ni bases)
+for h in codex opencode; do
+  instala "$h" && [ -d "$HOME/.$h" ] || continue
+  mkdir -p "$BACKUP/.$h"
+  for p in config.toml AGENTS.md ecc-install-state.json opencode.json memories agents mcp-configs; do
+    [ -e "$HOME/.$h/$p" ] && cp -a "$HOME/.$h/$p" "$BACKUP/.$h/" || true
+  done
+done
+if instala pi && [ -f "$HOME/.pi/agent/settings.json" ]; then
+  mkdir -p "$BACKUP/.pi/agent" && cp -a "$HOME/.pi/agent/settings.json" "$BACKUP/.pi/agent/"
 fi
 
 # 2. Copiar el harness (los symlinks de skills/ son relativos y resuelven solos)
@@ -70,6 +87,7 @@ SHARED="$(dirname "$SRC")/shared-skills.txt"
 if [ -f "$SHARED" ]; then
   for h in "$HOME/.codex/skills" "$HOME/.opencode/skills"; do
     [ -d "$h" ] || continue
+    case "$h" in *"/.codex/"*) instala codex || continue;; *"/.opencode/"*) instala opencode || continue;; esac
     n=0
     while read -r sk; do
       [ -n "$sk" ] && [ -d "$HOME/.agents/skills/$sk" ] || continue
@@ -81,7 +99,7 @@ fi
 
 # 3d. Codex y OpenCode (solo configuracion; sessions/sqlite/bin/node_modules quedan fuera)
 for h in codex opencode; do
-  [ -d "$SRC/.$h" ] || continue
+  [ -d "$SRC/.$h" ] && instala "$h" || continue
   mkdir -p "$HOME/.$h"
   if [ "$h" = codex ]; then DIRS="skills agents mcp-configs memories"; FILES="config.toml AGENTS.md ecc-install-state.json"; else DIRS="skills scripts commands hooks tools prompts dist plugin"; FILES="opencode.json ecc-install-state.json AGENTS.md the-security-guide.md package.json"; fi
   for d in $DIRS; do [ -d "$SRC/.$h/$d" ] && cp -a "$SRC/.$h/$d" "$HOME/.$h/"; done
@@ -98,7 +116,7 @@ if '/home/nicol'!=home and '/home/nicol' in raw: open(p,'w').write(raw.replace('
 done
 
 # 4. Pi: configuración y extensiones (sin auth, sesiones ni estado local)
-if [ -d "$SRC/.pi/agent" ]; then
+if [ -d "$SRC/.pi/agent" ] && instala pi; then
   mkdir -p "$HOME/.pi/agent"
   cp -a "$SRC/.pi/agent/settings.json" "$HOME/.pi/agent/settings.json"
   if [ -d "$SRC/.pi/agent/extensions" ]; then

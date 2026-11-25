@@ -48,6 +48,16 @@ conservando el `mcpServers` local y termina ejecutando `prune-ecc.sh`.
 
 Windows nativo: `install.ps1` (port sin probar; en WSL usar `bootstrap.sh`).
 
+### Instalar solo una parte (`HARNESS_ONLY`)
+
+`bootstrap.sh` instala por defecto Claude Code, Codex, OpenCode y Pi. En una máquina donde otro sistema depende de su propia configuración de Codex (p. ej. Acris, donde Hermes usa Codex con su modelo y proyectos de confianza), instalar solo Claude:
+
+```bash
+HARNESS_ONLY=claude ./bootstrap.sh
+```
+
+Valores: cualquier combinación de `claude codex opencode pi`. Antes de pisar la configuración de Codex, OpenCode o Pi, el bootstrap la respalda en `~/.claude-backup-<fecha>/.<host>/`.
+
 ## Sincronizar cambios desde una máquina
 
 ```bash
