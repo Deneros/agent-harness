@@ -3,13 +3,33 @@
 set -euo pipefail
 DEST="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/home"
 
-for d in agents commands scripts hooks rules ecc skills .agents; do
+for d in agents commands scripts hooks rules ecc skills .agents skills-library agents-library commands-library; do
   [ -d "$HOME/.claude/$d" ] && mkdir -p "$DEST/.claude/$d" && rsync -a --delete "$HOME/.claude/$d/" "$DEST/.claude/$d/"
 done
 for f in AGENTS.md README.md marketplace.json plugin.json PLUGIN_SCHEMA_NOTES.md the-security-guide.md; do
   [ -f "$HOME/.claude/$f" ] && cp -a "$HOME/.claude/$f" "$DEST/.claude/$f"
 done
 cp -a "$HOME/.claude/settings.json" "$DEST/.claude/settings.json"
+# Portabilidad y secretos del settings versionado (la copia viva no se toca):
+#  - ECC 2.2.x embebe la ruta del HOME en base64: neutralizarla
+#  - rutas absolutas del HOME en comandos propios (impeccable) -> $HOME
+#  - mcpServers fuera: puede llevar tokens en la URL y nunca debe versionarse
+python3 - "$DEST/.claude/settings.json" <<'PYEOF'
+import json,re,sys
+p=sys.argv[1]
+s=json.load(open(p))
+s.pop('mcpServers',None)
+abs_home=re.compile(r"'(?:/Users/[^/']+|/home/[^/']+)/\.claude/([^']*)'")
+for entries in s.get('hooks',{}).values():
+    for e in entries:
+        for h in e.get('hooks',[]):
+            c=h.get('command','')
+            c=re.sub(r"Buffer\.from\('[A-Za-z0-9+/=]+','base64'\)","Buffer.from('','base64')",c)
+            c=abs_home.sub(lambda m:'"$HOME/.claude/%s"'%m.group(1),c)
+            h['command']=c
+with open(p,'w') as f:
+    json.dump(s,f,indent=2,ensure_ascii=False); f.write('\n')
+PYEOF
 rsync -a --delete "$HOME/.agents/skills/" "$DEST/.agents/skills/"
 
 # Pi: guardar solo settings sin identificador local y extensiones propias.
@@ -38,7 +58,9 @@ MEM="$HOME/.claude/projects/$SLUG/memory"
 : > "$(dirname "$DEST")/shared-skills.txt"
 for h in "$HOME/.codex/skills" "$HOME/.opencode/skills"; do
   [ -d "$h" ] || continue
-  find "$h" -maxdepth 1 -type l -lname '*.agents/skills/*' -printf '%f\n' 2>/dev/null
+  for l in "$h"/*; do
+    [ -L "$l" ] && readlink "$l" | grep -q '\.agents/skills/' && basename "$l"  || true
+  done
 done | sort -u > "$(dirname "$DEST")/shared-skills.txt"
 echo "==> $(wc -l < "$(dirname "$DEST")/shared-skills.txt") skills compartidas registradas"
 

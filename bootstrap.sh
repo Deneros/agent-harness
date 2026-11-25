@@ -10,7 +10,7 @@ echo "==> destino: $HOME"
 # 1. Respaldar lo que vamos a pisar
 if [ -d "$HOME/.claude" ]; then
   mkdir -p "$BACKUP"
-  for d in agents commands scripts hooks rules ecc skills settings.json; do
+  for d in agents commands scripts hooks rules ecc skills skills-library agents-library commands-library AGENTS.md settings.json; do
     [ -e "$HOME/.claude/$d" ] && cp -r "$HOME/.claude/$d" "$BACKUP/" || true
   done
   echo "==> respaldo en $BACKUP"
@@ -19,14 +19,29 @@ fi
 # 2. Copiar el harness (los symlinks de skills/ son relativos y resuelven solos)
 mkdir -p "$HOME/.agents" "$HOME/.claude"
 cp -a "$SRC/.agents/skills" "$HOME/.agents/"
-for d in agents commands scripts hooks rules ecc skills .agents; do
+for d in agents commands scripts hooks rules ecc skills .agents skills-library agents-library commands-library; do
   [ -e "$SRC/.claude/$d" ] && cp -a "$SRC/.claude/$d" "$HOME/.claude/"
 done
 # Archivos sueltos en la raiz que ECC instala (v2.1.0+)
 for f in AGENTS.md README.md marketplace.json plugin.json PLUGIN_SCHEMA_NOTES.md the-security-guide.md; do
   [ -f "$SRC/.claude/$f" ] && cp -a "$SRC/.claude/$f" "$HOME/.claude/$f"
 done
-cp -a "$SRC/.claude/settings.json" "$HOME/.claude/settings.json"
+# settings.json: el del repo, conservando el mcpServers local (no se versiona: lleva tokens)
+python3 - "$SRC/.claude/settings.json" "$HOME/.claude/settings.json" <<'PYEOF'
+import json,os,sys
+src,dst=sys.argv[1:3]
+s=json.load(open(src))
+if os.path.exists(dst):
+    try:
+        mcp=json.load(open(dst)).get('mcpServers')
+    except Exception:
+        mcp=None
+    if mcp:
+        s['mcpServers']=mcp
+        print("==> mcpServers local conservado")
+with open(dst,'w') as f:
+    json.dump(s,f,indent=2,ensure_ascii=False); f.write('\n')
+PYEOF
 
 # 3. La memoria vive bajo un slug derivado del HOME, distinto en cada máquina
 SLUG=$(printf '%s' "$HOME" | tr '/' '-')
