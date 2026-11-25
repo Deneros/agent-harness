@@ -1,0 +1,4 @@
+{
+  "_comentario": "version_urls: applicationId de Dokploy -> URL donde la app informa su commit (el cuerpo debe contener el SHA corto). Al 2026-11-25 ninguna app lo expone (MRH /api/core/health/ y AuditGlow /actuator/info no traen commit); cuando una lo haga, añadirla aquí. Las URLs de salud salen de ~/development/operaciones/acris/app-health/config.json y de los dominios de Dokploy.",
+  "version_urls": {}
+}

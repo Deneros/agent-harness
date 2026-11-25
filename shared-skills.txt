@@ -7,6 +7,7 @@ apple-design
 ask-sonner
 code-reviewer
 design-taste-frontend
+desplegar
 devops-rollout-plan
 documentation-writer
 emil-design-eng
