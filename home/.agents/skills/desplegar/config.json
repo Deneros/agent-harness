@@ -1,4 +1,7 @@
 {
-  "_comentario": "version_urls: applicationId de Dokploy -> URL donde la app informa su commit (el cuerpo debe contener el SHA corto). Al 2026-11-25 ninguna app lo expone (MRH /api/core/health/ y AuditGlow /actuator/info no traen commit); cuando una lo haga, añadirla aquí. Las URLs de salud salen de ~/development/operaciones/acris/app-health/config.json y de los dominios de Dokploy.",
-  "version_urls": {}
+  "_comentario": "version_urls: applicationId de Dokploy -> URL donde la app informa su commit (el cuerpo debe contener el SHA corto). Desde el 2026-11-26 los backends lo informan: AuditGlow en /actuator/info (git.commit.id) y MRH en /api/core/info/ (commit). Solo están las apps de test; las de producción se añaden cuando su próxima promoción lleve ese código (antes la verificación fallaría). Los workers de Celery no tienen HTTP: se comprueban por el commit que anota Dokploy. Las URLs de salud salen de ~/development/operaciones/acris/app-health/config.json y de los dominios de Dokploy.",
+  "version_urls": {
+    "4Z7XmOyUKRlLjZjjLtgHy": "https://back-staging.158.69.215.17.sslip.io/actuator/info",
+    "mZSF0JxDnXttXcgo_opdX": "https://testapi.myrighthandnow.net/api/core/info/"
+  }
 }
